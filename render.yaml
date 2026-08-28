@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: gatilho-telas-api
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm run migration:run && npm start
+    envVars:
+      - key: SUPABASE_URL
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: FRONTEND_ORIGIN
+        sync: false
+      - key: SUPABASE_BUCKET
+        value: anexos

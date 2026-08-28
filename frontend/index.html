@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Nova Tela</title>
+    <style>
+        :root {
+            --azul-embraer: #0864ad;
+            --fundo-area: #f2f2f2;
+            --sombra: rgba(0, 0, 0, .16);
+            --texto: #1764a2;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+        }
+
+        body {
+            overflow: hidden;
+            background: var(--fundo-area);
+            color: #333;
+            font-family: "Segoe UI", Tahoma, sans-serif;
+        }
+
+        .barra-superior {
+            position: fixed;
+            inset: 0 0 auto;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            height: 60px;
+            padding: 0 10px 0 30px;
+            background: var(--azul-embraer);
+        }
+
+        .botao-menu {
+            display: grid;
+            width: 24px;
+            height: 24px;
+            margin-right: 0;
+            padding: 0;
+            place-items: center;
+            border: 0;
+            background: transparent;
+            color: #fff;
+            cursor: pointer;
+            font-size: 18px;
+            line-height: 1;
+        }
+
+        .perfil {
+            display: grid;
+            width: 34px;
+            height: 34px;
+            margin-left: auto;
+            place-items: center;
+            border-radius: 50%;
+            background: #fff;
+            color: var(--texto);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .menu-usuario {
+            position: fixed;
+            top: 66px;
+            right: 10px;
+            z-index: 20;
+            display: none;
+            min-width: 180px;
+            padding: 8px;
+            background: #fff;
+            box-shadow: 0 4px 12px var(--sombra);
+        }
+
+        .menu-usuario.aberto {
+            display: block;
+        }
+
+        .menu-usuario button {
+            width: 100%;
+            padding: 10px;
+            border: 0;
+            background: transparent;
+            color: #555;
+            cursor: pointer;
+            text-align: left;
+        }
+
+        .menu-usuario button:hover {
+            background: #edf3f7;
+            color: var(--texto);
+        }
+
+        .login-aviso {
+            margin: 30px 0;
+            padding: 24px;
+            background: #fff;
+            color: #4c5660;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, .12);
+        }
+
+        .estrutura {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            padding-top: 60px;
+        }
+
+        .menu-lateral {
+            position: fixed;
+            top: 60px;
+            bottom: 0;
+            left: 0;
+            z-index: 5;
+            width: 298px;
+            transform: translateX(-100%);
+            transition: transform .2s ease;
+            background: #fff;
+            box-shadow: 2px 0 6px var(--sombra);
+        }
+
+        .menu-lateral.aberto {
+            transform: translateX(0);
+        }
+
+        .lista-navegacao {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding: 22px 12px;
+            margin: 0;
+            list-style: none;
+        }
+
+        .item-navegacao {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            width: 100%;
+            min-height: 48px;
+            padding: 8px 12px;
+            border: 0;
+            background: transparent;
+            color: #777e88;
+            cursor: pointer;
+            font: inherit;
+            font-size: 16px;
+            text-align: left;
+        }
+
+        .item-navegacao:hover,
+        .item-navegacao:focus-visible {
+            background: #f1f5f8;
+            color: var(--texto);
+            outline: none;
+        }
+
+        .icone-navegacao {
+            display: grid;
+            width: 22px;
+            place-items: center;
+            color: #777e88;
+            font-size: 19px;
+        }
+
+        .item-navegacao.ativo {
+            background: #e8f1f8;
+            color: var(--texto);
+        }
+
+        .conteudo-tela {
+            width: min(100%, 1100px);
+            height: 100%;
+            margin: 0 auto;
+            padding: 48px 42px;
+            overflow: auto;
+        }
+
+        .conteudo-tela h1 {
+            margin: 0 0 28px;
+            color: var(--texto);
+            font-size: clamp(30px, 4vw, 56px);
+            line-height: 1.1;
+        }
+
+        .grade-acoes {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .cartao-acao {
+            min-height: 150px;
+            padding: 24px;
+            border-radius: 10px;
+            background: #fff;
+            box-shadow: 0 5px 12px rgba(0, 0, 0, .12);
+        }
+
+        .cartao-acao h2 {
+            margin: 0 0 16px;
+            color: #064789;
+            font-size: 22px;
+        }
+
+        .cartao-acao p {
+            margin: 0 0 20px;
+            color: #626b76;
+            line-height: 1.5;
+        }
+
+        .acao-principal {
+            display: inline-block;
+            padding: 10px 16px;
+            border: 0;
+            border-radius: 6px;
+            background: var(--texto);
+            color: #fff;
+            cursor: pointer;
+            font: inherit;
+            text-decoration: none;
+        }
+
+        .acao-principal:hover,
+        .acao-principal:focus-visible {
+            background: #0b4b7d;
+            outline: none;
+        }
+
+        .formulario-conteudo {
+            max-width: 960px;
+            padding: 26px;
+            border-radius: 10px;
+            background: #fff;
+            box-shadow: 0 5px 12px rgba(0, 0, 0, .12);
+        }
+
+        .formulario-conteudo label {
+            display: block;
+            margin: 0 0 7px;
+            color: #68727d;
+            font-size: 14px;
+        }
+
+        .formulario-conteudo input,
+        .formulario-conteudo textarea {
+            width: 100%;
+            margin-bottom: 18px;
+            padding: 11px 12px;
+            border: 1px solid #ccd2d8;
+            border-radius: 5px;
+            background: #fff;
+            color: #333;
+            font: inherit;
+        }
+
+        .linha-formulario {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .formulario-conteudo select,
+        .arquivo-tela {
+            width: 100%;
+            margin-bottom: 18px;
+            padding: 11px 12px;
+            border: 1px solid #ccd2d8;
+            border-radius: 5px;
+            background: #fff;
+            color: #333;
+            font: inherit;
+        }
+
+        .grade-arquivos {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+            margin-bottom: 8px;
+        }
+
+        .arquivo-tela {
+            margin: 0;
+            padding: 10px;
+        }
+
+        .arquivo-tela::file-selector-button {
+            margin-right: 8px;
+            padding: 7px 10px;
+            border: 0;
+            border-radius: 4px;
+            background: #e8f1f8;
+            color: var(--texto);
+            cursor: pointer;
+        }
+
+        .formulario-conteudo textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .mensagem-formulario {
+            min-height: 22px;
+            margin: 14px 0 0;
+            color: #26734d;
+        }
+
+        .lista-solicitacoes {
+            width: 100%;
+            background: #fff;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, .12);
+        }
+
+        .solicitacao {
+            display: grid;
+            grid-template-columns: minmax(260px, 1fr) auto;
+            gap: 24px;
+            align-items: center;
+            min-height: 130px;
+            padding: 20px 30px;
+            border-bottom: 9px solid var(--fundo-area);
+        }
+
+        .solicitacao:last-child {
+            border-bottom: 0;
+        }
+
+        .solicitacao h2 {
+            margin: 0 0 5px;
+            color: #111;
+            font-size: 22px;
+        }
+
+        .solicitacao p {
+            margin: 3px 0;
+            color: #3f4852;
+            font-size: 16px;
+        }
+
+        .acoes-solicitacao {
+            display: flex;
+            align-items: center;
+            gap: 38px;
+        }
+
+        .status-solicitacao {
+            min-width: 156px;
+            padding: 13px 16px;
+            border-radius: 22px;
+            color: #111;
+            font-size: 18px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .status-pendente {
+            background: #ffb800;
+        }
+
+        .status-aprovado {
+            background: #d8d8d8;
+        }
+
+        .status-reprovado {
+            background: #d8d8d8;
+        }
+
+        .botao-aprovacao {
+            min-width: 182px;
+            padding: 12px 18px;
+            border: 1px solid transparent;
+            border-radius: 22px;
+            background: #00b509;
+            color: #fff;
+            cursor: pointer;
+            font: inherit;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .botao-aprovacao.reprovar {
+            background: #fff;
+            border-color: #f00;
+            color: #f00;
+        }
+
+        .botao-aprovacao:hover,
+        .botao-aprovacao:focus-visible {
+            filter: brightness(.92);
+            outline: none;
+        }
+
+        .lista-vazia {
+            padding: 30px;
+            color: #6d7580;
+            font-size: 17px;
+        }
+
+        .anexos-solicitacao {
+            margin-top: 10px !important;
+            font-size: 13px !important;
+        }
+
+        .anexos-solicitacao a {
+            margin-right: 12px;
+            color: var(--texto);
+        }
+
+        @media (max-width: 900px) {
+            .solicitacao {
+                grid-template-columns: 1fr;
+                gap: 14px;
+            }
+
+            .acoes-solicitacao {
+                justify-content: flex-start;
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+        }
+
+        @media (max-width: 760px) {
+            .conteudo-tela {
+                padding: 34px 22px;
+            }
+
+            .grade-acoes {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .area-principal {
+            flex: 1;
+            min-width: 0;
+            height: 100%;
+            background: var(--fundo-area);
+        }
+
+        @media (max-width: 640px) {
+            .barra-superior {
+                padding-left: 16px;
+            }
+
+            .botao-menu {
+                margin-right: 16px;
+            }
+
+            .menu-lateral {
+                width: 72vw;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header class="barra-superior">
+        <button class="botao-menu" type="button" aria-label="Abrir menu" title="Abrir menu" aria-expanded="false"
+            aria-controls="menuLateral">&#9776;</button>
+        <button class="perfil" id="perfilUsuario" type="button" aria-label="Abrir menu do usuário">PC</button>
+    </header>
+    <div class="menu-usuario" id="menuUsuario">
+        <button type="button" id="meuPerfil">Meu Perfil</button>
+        <button type="button" id="sairSistema">Sair</button>
+    </div>
+
+    <main class="estrutura">
+        <aside class="menu-lateral" id="menuLateral" aria-label="Menu lateral">
+            <nav>
+                <ul class="lista-navegacao">
+                    <li><button class="item-navegacao" type="button" data-tela="iniciar"><span
+                                class="icone-navegacao">▶</span>Iniciar telas</button></li>
+                    <li><button class="item-navegacao" type="button" data-tela="solicitar"><span
+                                class="icone-navegacao">✉</span>Solicitar espaço de conteúdo</button></li>
+                    <li><button class="item-navegacao" type="button" data-tela="gerenciamento"><span
+                                class="icone-navegacao">⚙</span>Gerenciamento</button></li>
+                </ul>
+            </nav>
+        </aside>
+        <section class="area-principal" id="areaPrincipal" aria-label="Área principal"></section>
+    </main>
+
+    <script src="./api-config.js"></script>
+    <script src="./auth-config.js"></script>
+    <script type="module" src="./auth.js"></script>
+    <script>
+        const API_BASE_URL = window.API_BASE_URL || 'http://localhost:3000';
+        const LOCAL_LAUNCHER_URL = 'http://127.0.0.1:8899';
+        const apiUrl = (path) => API_BASE_URL + path;
+        const botaoMenu = document.querySelector('.botao-menu');
+        const menuLateral = document.getElementById('menuLateral');
+        const areaPrincipal = document.getElementById('areaPrincipal');
+        const botoesNavegacao = document.querySelectorAll('[data-tela]');
+        const perfilUsuario = document.getElementById('perfilUsuario');
+        const menuUsuario = document.getElementById('menuUsuario');
+
+        async function iniciarTelas() {
+            const mensagem = document.getElementById('mensagemTelas');
+            const botao = document.getElementById('botaoIniciarTelas');
+            botao.disabled = true;
+            mensagem.textContent = 'Abrindo as telas nos monitores...';
+            try {
+                const resposta = await fetch(LOCAL_LAUNCHER_URL + '/start', { method: 'POST' });
+                if (!resposta.ok) throw new Error('falha ao iniciar');
+                mensagem.textContent = 'Comando enviado. As telas serão abertas em instantes.';
+            } catch (erro) {
+                mensagem.textContent = 'Não foi possível iniciar as telas. Verifique o servidor.';
+                botao.disabled = false;
+            }
+        }
+
+        const telas = {
+            iniciar: `
+                <div class="conteudo-tela">
+                    <h1>Iniciar telas</h1>
+                    <div class="grade-acoes">
+                        <article class="cartao-acao">
+                            <h2>Visualizar as 3 telas</h2>
+                            <p>Abra esquerda, centro e direita, cada uma em um monitor separado.</p>
+                            <button class="acao-principal" type="button" id="botaoIniciarTelas">Iniciar as 3 telas</button>
+                            <p class="mensagem-formulario" id="mensagemTelas" role="status"></p>
+                        </article>
+                    </div>
+                </div>`,
+            solicitar: `
+                <div class="conteudo-tela">
+                    <h1>Solicitar espaço de conteúdo</h1>
+                    <form class="formulario-conteudo" id="formSolicitacao">
+                        <label for="tituloApresentacao">Título (nome da apresentação)</label>
+                        <input id="tituloApresentacao" name="titulo" type="text" required>
+                        <div class="linha-formulario">
+                            <div>
+                                <label for="tipoServico">Tipo de serviço</label>
+                                <select id="tipoServico" name="tipoServico" required>
+                                    <option value="">Selecione</option>
+                                    <option>Celebração com a equipe</option>
+                                    <option>Visita</option>
+                                    <option>Comunicação com o site</option>
+                                    <option>Reconhecimento</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="aprovacao">Aprovação</label>
+                                <select id="aprovacao" name="aprovacao" required>
+                                    <option value="pendente">Pendente de aprovação</option>
+                                    <option value="aprovado">Aprovado</option>
+                                    <option value="reprovado">Reprovado</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="linha-formulario">
+                            <div>
+                                <label for="inicioPublicacao">Início da publicação</label>
+                                <input id="inicioPublicacao" name="inicio" type="datetime-local" required>
+                            </div>
+                            <div>
+                                <label for="fimPublicacao">Fim da publicação</label>
+                                <input id="fimPublicacao" name="fim" type="datetime-local" required>
+                            </div>
+                        </div>
+                        <label>Arquivos (somente imagem ou vídeo)</label>
+                        <div class="grade-arquivos">
+                            <div><label for="arquivoEsquerda">Esquerda</label><input class="arquivo-tela" id="arquivoEsquerda" type="file" accept="image/*,video/*"></div>
+                            <div><label for="arquivoCentro">Centro</label><input class="arquivo-tela" id="arquivoCentro" type="file" accept="image/*,video/*"></div>
+                            <div><label for="arquivoDireita">Direita</label><input class="arquivo-tela" id="arquivoDireita" type="file" accept="image/*,video/*"></div>
+                        </div>
+                        <label for="detalhesSolicitacao">Detalhes da solicitação</label>
+                        <textarea id="detalhesSolicitacao" name="detalhes"></textarea>
+                        <button class="acao-principal" type="submit">Enviar solicitação</button>
+                        <p class="mensagem-formulario" id="mensagemSolicitacao" role="status"></p>
+                    </form>
+                </div>`,
+            gerenciamento: `
+                <div class="conteudo-tela">
+                    <h1>Gerenciamento</h1>
+                    <div class="lista-solicitacoes" id="listaSolicitacoes">
+                        <div class="lista-vazia">Carregando solicitações...</div>
+                    </div>
+                </div>`
+        };
+
+        function formatarPeriodo(inicio, fim) {
+            const formatador = new Intl.DateTimeFormat('pt-BR', {
+                day: '2-digit', month: '2-digit', year: 'numeric',
+                hour: '2-digit', minute: '2-digit'
+            });
+            return `${formatador.format(new Date(inicio))} até ${formatador.format(new Date(fim))}`;
+        }
+
+        function textoAprovacao(status) {
+            return { pendente: 'PENDENTE', aprovado: 'APROVADO', reprovado: 'RECUSADO' }[status] || 'PENDENTE';
+        }
+
+        async function carregarSolicitacoes() {
+            const lista = document.getElementById('listaSolicitacoes');
+            if (!lista) return;
+            try {
+                const resposta = await fetch(apiUrl('/solicitacoes'), { cache: 'no-store' });
+                if (!resposta.ok) throw new Error('falha ao carregar');
+                const dados = await resposta.json();
+                const solicitacoes = dados.solicitacoes || [];
+                lista.innerHTML = solicitacoes.length ? solicitacoes.map((solicitacao) => `
+                    <article class="solicitacao">
+                        <div>
+                            <h2>${escaparHtml(solicitacao.titulo)}</h2>
+                            <p>${formatarPeriodo(solicitacao.inicio, solicitacao.fim)}</p>
+                            <p>${escaparHtml(solicitacao.solicitante || 'Solicitante não informado')}</p>
+                            <p class="anexos-solicitacao">${linksAnexos(solicitacao.arquivos)}</p>
+                        </div>
+                        <div class="acoes-solicitacao">
+                            <span class="status-solicitacao status-${solicitacao.aprovacao}">${textoAprovacao(solicitacao.aprovacao)}</span>
+                            <button class="botao-aprovacao reprovar" type="button" data-aprovacao="reprovado" data-id="${solicitacao.id}">Reprovar</button>
+                            <button class="botao-aprovacao" type="button" data-aprovacao="aprovado" data-id="${solicitacao.id}">Aprovar</button>
+                        </div>
+                    </article>`).join('') : '<div class="lista-vazia">Nenhuma solicitação cadastrada.</div>';
+                lista.querySelectorAll('[data-aprovacao]').forEach((botao) => {
+                    botao.addEventListener('click', () => atualizarAprovacao(botao.dataset.id, botao.dataset.aprovacao));
+                });
+            } catch (erro) {
+                lista.innerHTML = '<div class="lista-vazia">Não foi possível carregar as solicitações.</div>';
+            }
+        }
+
+        function escaparHtml(valor) {
+            return String(valor || '').replace(/[&<>"']/g, (caractere) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[caractere]));
+        }
+
+        function linksAnexos(arquivos) {
+            return Object.entries(arquivos || {}).map(([lado, arquivo]) =>
+                `<a href="${apiUrl('/anexos/' + encodeURIComponent(arquivo))}" target="_blank" rel="noopener">${lado}</a>`
+            ).join('') || 'Sem anexos';
+        }
+
+        async function atualizarAprovacao(id, aprovacao) {
+            const resposta = await fetch(apiUrl('/solicitacoes/' + encodeURIComponent(id)), {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ aprovacao })
+            });
+            if (resposta.ok) carregarSolicitacoes();
+        }
+
+        function abrirTela(nomeTela) {
+            areaPrincipal.innerHTML = telas[nomeTela];
+            botoesNavegacao.forEach((botao) => {
+                botao.classList.toggle('ativo', botao.dataset.tela === nomeTela);
+            });
+            if (nomeTela === 'solicitar') {
+                document.getElementById('formSolicitacao').addEventListener('submit', (evento) => {
+                    evento.preventDefault();
+                    enviarSolicitacao(evento.target);
+                });
+            }
+            if (nomeTela === 'gerenciamento') carregarSolicitacoes();
+        }
+
+        async function enviarSolicitacao(formulario) {
+            const mensagem = document.getElementById('mensagemSolicitacao');
+            const botao = formulario.querySelector('button[type=submit]');
+            botao.disabled = true;
+            mensagem.textContent = 'Salvando solicitação e arquivos...';
+            try {
+                const dadosForm = new FormData(formulario);
+                const arquivos = {
+                    arquivoEsquerda: document.getElementById('arquivoEsquerda').files[0],
+                    arquivoCentro: document.getElementById('arquivoCentro').files[0],
+                    arquivoDireita: document.getElementById('arquivoDireita').files[0]
+                };
+                Object.entries(arquivos).forEach(([campo, arquivo]) => {
+                    if (arquivo) dadosForm.append(campo, arquivo);
+                });
+                const resposta = await fetch(apiUrl('/solicitacoes'), {
+                    method: 'POST',
+                    body: dadosForm
+                });
+                if (!resposta.ok) throw new Error(await resposta.text());
+                mensagem.textContent = 'Solicitação salva com sucesso.';
+                formulario.reset();
+            } catch (erro) {
+                mensagem.textContent = 'Não foi possível salvar a solicitação.';
+            } finally {
+                botao.disabled = false;
+            }
+        }
+
+        botaoMenu.addEventListener('click', () => {
+            const aberto = menuLateral.classList.toggle('aberto');
+            botaoMenu.setAttribute('aria-expanded', String(aberto));
+            botaoMenu.setAttribute('aria-label', aberto ? 'Fechar menu' : 'Abrir menu');
+            botaoMenu.setAttribute('title', aberto ? 'Fechar menu' : 'Abrir menu');
+        });
+
+        botoesNavegacao.forEach((botao) => {
+            botao.addEventListener('click', () => {
+                abrirTela(botao.dataset.tela);
+                menuLateral.classList.remove('aberto');
+                botaoMenu.setAttribute('aria-expanded', 'false');
+                botaoMenu.setAttribute('aria-label', 'Abrir menu');
+                botaoMenu.setAttribute('title', 'Abrir menu');
+            });
+        });
+
+        document.addEventListener('click', (evento) => {
+            if (evento.target.id === 'botaoIniciarTelas') iniciarTelas();
+        });
+
+        abrirTela('iniciar');
+        perfilUsuario.addEventListener('click', () => menuUsuario.classList.toggle('aberto'));
+        document.getElementById('sairSistema').addEventListener('click', () => window.logoutMicrosoft());
+        document.getElementById('meuPerfil').addEventListener('click', async () => {
+            const usuario = await window.getAuthenticatedUser();
+            alert(usuario ? `${usuario.nome}\n${usuario.email}\nPerfil: ${usuario.perfil}` : 'Login corporativo nao configurado.');
+        });
+        window.getAuthenticatedUser?.().then((usuario) => {
+            if (usuario?.nome) perfilUsuario.textContent = usuario.nome.split(/\s+/).map((parte) => parte[0]).join('').slice(0, 2).toUpperCase();
+        });
+    </script>
+</body>
+
+</html>

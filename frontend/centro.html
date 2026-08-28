@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Tela Centro</title>
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background: #000;
+      overflow: hidden;
+    }
+
+    .camada {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0;
+      transition: opacity 1s ease;
+    }
+
+    #camadaA {
+      opacity: 1;
+    }
+
+    #alertaWrap {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+    }
+
+    #alertaWrap img,
+    #alertaWrap video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    #status {
+      position: fixed;
+      bottom: 10px;
+      left: 14px;
+      color: #c99;
+      font-family: consolas, monospace;
+      font-size: 13px;
+      display: none;
+      z-index: 20;
+    }
+  </style>
+</head>
+
+<body>
+  <img id="camadaA" class="camada" alt="">
+  <img id="camadaB" class="camada" alt="">
+  <video id="videoFundo" class="camada" playsinline muted></video>
+  <div id="alertaWrap"></div>
+  <div id="status"></div>
+  <script src="./api-config.js"></script>
+  <script src="./auth-config.js"></script>
+  <script type="module" src="./auth.js"></script>
+  <script>
+    const API_BASE_URL = window.API_BASE_URL || 'http://localhost:3000';
+    const apiUrl = (path) => API_BASE_URL + path;
+    const LADO = "centro";
+    const PASTA_FUNDO = "fundo-centro";
+    const PASTA_GATILHOS = "gatilhos";
+
+    const el = {
+      camadaA: document.getElementById('camadaA'),
+      camadaB: document.getElementById('camadaB'),
+      videoFundo: document.getElementById('videoFundo'),
+      alertaWrap: document.getElementById('alertaWrap'),
+      status: document.getElementById('status'),
+    };
+
+    let listaFundo = [];
+    let indiceFundo = 0;
+    let ativa = 'A';
+    let timerRotacao = null;
+    let intervaloAtual = 10;
+    let emAlerta = false;
+    let timerEsconderAlerta = null;
+    let ultimoContador = null;
+    let ultimoIntervalo = null;
+    let ultimoCancelar = null;
+    let gatilhosCache = [];
+    let teclaCancelarCache = '';
+
+    async function atualizarCacheDeAtalhos() {
+      try {
+        const [rG, rC] = await Promise.all([
+          fetch(apiUrl('/gatilhos'), { cache: 'no-store' }),
+          fetch(apiUrl('/config'), { cache: 'no-store' }),
+        ]);
+        const dG = await rG.json();
+        const dC = await rC.json();
+        gatilhosCache = dG.gatilhos || [];
+        teclaCancelarCache = (dC.teclaCancelar || '').toLowerCase();
+      } catch (e) { /* mantem o cache anterior */ }
+    }
+
+    function teclaDoCode(code) {
+      if (/^F([1-9]|1[0-9]|2[0-4])$/.test(code)) return code.toLowerCase();
+      if (/^Key[A-Z]$/.test(code)) return code.slice(3).toLowerCase();
+      if (/^Digit[0-9]$/.test(code)) return code.slice(5);
+      return null;
+    }
+
+    function comboDoEvento(e) {
+      const t = teclaDoCode(e.code);
+      if (!t) return null;
+      const mods = [];
+      if (e.ctrlKey) mods.push('ctrl');
+      if (e.altKey) mods.push('alt');
+      if (e.shiftKey) mods.push('shift');
+      mods.push(t);
+      return mods.join('+');
+    }
+
+    window.addEventListener('keydown', (e) => {
+      const combo = comboDoEvento(e);
+      if (!combo) return;
+      if (teclaCancelarCache && combo === teclaCancelarCache) {
+        fetch(apiUrl('/cancelar'));
+        return;
+      }
+      const g = gatilhosCache.find(x => x.tipo === 'tecla' && (x.tecla || '').toLowerCase() === combo);
+      if (g) fetch(apiUrl('/disparar?id=' + encodeURIComponent(g.id)));
+    });
+
+    atualizarCacheDeAtalhos();
+    setInterval(atualizarCacheDeAtalhos, 5000);
+
+    async function carregarLista() {
+      try {
+        const r = await fetch(apiUrl('/lista?pasta=' + PASTA_FUNDO), { cache: 'no-store' });
+        const dados = await r.json();
+        listaFundo = dados.arquivos || [];
+      } catch (e) {
+        listaFundo = [];
+      }
+    }
+
+    function ehVideo(nome) {
+      return /\.(mp4|webm)$/i.test(nome || '');
+    }
+
+    function agendarProximoFundo(ms) {
+      if (timerRotacao) clearTimeout(timerRotacao);
+      timerRotacao = setTimeout(cicloFundo, ms);
+    }
+
+    function mostrarImagemDeFundo(arquivo) {
+      el.videoFundo.pause();
+      el.videoFundo.style.opacity = '0';
+      el.videoFundo.removeAttribute('src');
+      const proxima = ativa === 'A' ? el.camadaB : el.camadaA;
+      const atual = ativa === 'A' ? el.camadaA : el.camadaB;
+      proxima.onload = () => {
+        proxima.style.opacity = '1';
+        atual.style.opacity = '0';
+        ativa = ativa === 'A' ? 'B' : 'A';
+      };
+      proxima.src = apiUrl('/conteudo/' + PASTA_FUNDO + '/' + encodeURIComponent(arquivo) + '?t=' + Date.now());
+      agendarProximoFundo(intervaloAtual * 1000);
+    }
+
+    function mostrarVideoDeFundo(arquivo) {
+      el.camadaA.style.opacity = '0';
+      el.camadaB.style.opacity = '0';
+      el.videoFundo.onended = () => agendarProximoFundo(0);
+      el.videoFundo.onerror = () => agendarProximoFundo(intervaloAtual * 1000);
+      el.videoFundo.src = apiUrl('/conteudo/' + PASTA_FUNDO + '/' + encodeURIComponent(arquivo) + '?t=' + Date.now());
+      el.videoFundo.style.opacity = '1';
+      el.videoFundo.play().catch(() => { });
+    }
+
+    function mostrarProximoFundo() {
+      if (emAlerta) { agendarProximoFundo(intervaloAtual * 1000); return; }
+      if (listaFundo.length === 0) {
+        el.status.style.display = 'block';
+        el.status.textContent = LADO + ' — coloque imagens em conteudo/' + PASTA_FUNDO;
+        agendarProximoFundo(intervaloAtual * 1000);
+        return;
+      }
+      el.status.style.display = 'none';
+      const arquivo = listaFundo[indiceFundo % listaFundo.length];
+      indiceFundo++;
+      if (ehVideo(arquivo)) {
+        mostrarVideoDeFundo(arquivo);
+      } else {
+        mostrarImagemDeFundo(arquivo);
+      }
+    }
+
+    async function cicloFundo() {
+      await carregarLista();
+      mostrarProximoFundo();
+    }
+
+    function iniciarRotacao(intervaloSegundos) {
+      intervaloAtual = intervaloSegundos;
+      if (timerRotacao) clearTimeout(timerRotacao);
+      cicloFundo();
+    }
+
+    function mostrarAlerta(arquivo, duracaoSegundos) {
+      if (!arquivo) return; // esse gatilho nao mexe nesta tela
+      emAlerta = true;
+      el.status.style.display = 'none';
+      el.alertaWrap.innerHTML = '';
+      const src = apiUrl('/conteudo/' + PASTA_GATILHOS + '/' + encodeURIComponent(arquivo) + '?t=' + Date.now());
+      if (ehVideo(arquivo)) {
+        const v = document.createElement('video');
+        v.src = src; v.playsInline = true; v.autoplay = true;
+        v.addEventListener('error', () => {
+          el.status.style.display = 'block';
+          el.status.textContent = LADO + ' — arquivo nao encontrado: conteudo/' + PASTA_GATILHOS + '/' + arquivo;
+        });
+        v.play().catch(() => { v.muted = true; v.play().catch(() => { }); });
+        el.alertaWrap.appendChild(v);
+      } else {
+        const img = document.createElement('img');
+        img.src = src;
+        img.onerror = () => {
+          el.status.style.display = 'block';
+          el.status.textContent = LADO + ' — arquivo nao encontrado: conteudo/' + PASTA_GATILHOS + '/' + arquivo;
+        };
+        el.alertaWrap.appendChild(img);
+      }
+      el.alertaWrap.style.display = 'flex';
+      if (timerEsconderAlerta) clearTimeout(timerEsconderAlerta);
+      timerEsconderAlerta = setTimeout(esconderAlerta, duracaoSegundos * 1000);
+    }
+
+    function esconderAlerta() {
+      emAlerta = false;
+      el.alertaWrap.style.display = 'none';
+      el.alertaWrap.innerHTML = '';
+    }
+
+    async function checarEstado() {
+      try {
+        const r = await fetch(apiUrl('/estado'), { cache: 'no-store' });
+        const dados = await r.json();
+        if (ultimoContador === null) {
+          ultimoContador = dados.contador;
+          ultimoCancelar = dados.contadorCancelar;
+          ultimoIntervalo = dados.intervaloFundo || 10;
+          iniciarRotacao(ultimoIntervalo);
+        } else {
+          if (dados.contadorCancelar !== ultimoCancelar) {
+            ultimoCancelar = dados.contadorCancelar;
+            esconderAlerta();
+          }
+          if (dados.contador !== ultimoContador) {
+            ultimoContador = dados.contador;
+            mostrarAlerta(dados[LADO], dados.duracao);
+          }
+          if (dados.intervaloFundo && dados.intervaloFundo !== ultimoIntervalo) {
+            ultimoIntervalo = dados.intervaloFundo;
+            iniciarRotacao(ultimoIntervalo);
+          }
+        }
+      } catch (e) {
+        el.status.style.display = 'block';
+        el.status.textContent = LADO + ' — servidor offline, tentando reconectar...';
+      }
+    }
+    setInterval(checarEstado, 200);
+    checarEstado();
+  </script>
+</body>
+
+</html>
